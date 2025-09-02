@@ -23,6 +23,12 @@ class Option(Generic[T], ABC):
     @abstractmethod
     def map(self, fn: Callable[[T], U]) -> Option[U]: ... # pragma: no cover
 
+    @abstractmethod
+    def bind(self, fn: Callable[[T], Option[U]]) -> Option[U]: ... # pragma: no cover
+    
+    @abstractmethod
+    def match(self, some: Callable[[T], U], nothing: Callable[[], U]) -> U: ... # pragma: no cover
+
 
 @dataclass(frozen=True)
 class Some(Option[T]):
@@ -41,6 +47,13 @@ class Some(Option[T]):
     def map(self, fn: Callable[[T], U]) -> Option[U]:
         return Some(fn(self.value))
 
+    def bind(self, fn: Callable[[T], Option[U]]) -> Option[U]:
+        return fn(self.value)
+
+    def match(self, some: Callable[[T], U], nothing: Callable[[], U]) -> U:
+        _ = nothing
+        return some(self.value)
+
 
 @dataclass(frozen=True)
 class Nothing(Option[T]):
@@ -56,6 +69,14 @@ class Nothing(Option[T]):
     def map(self, fn: Callable[[T], U]) -> Option[U]:
         _ = fn
         return Nothing()
+
+    def bind(self, fn: Callable[[T], Option[U]]) -> Option[U]:
+        _ = fn
+        return Nothing()
+
+    def match(self, some: Callable[[T], U], nothing: Callable[[], U]) -> U:
+        _ = some
+        return nothing()
 
 
 def some(value: T) -> Option[T]:
